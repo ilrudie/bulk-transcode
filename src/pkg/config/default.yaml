@@ -1,0 +1,15 @@
+---
+input_dir: "."
+output_dir: "./output"
+output_mark: "hevc"
+recursive: false
+exec: false
+command_arguments:
+# Some sensible defaults for VAAPI HEVC encoding
+  options: 
+    - "-vaapi_device /dev/dri/renderD128"
+    - "-hwaccel vaapi"
+    - "-vf 'format=nv12,hwupload'"
+    - "-c:v hevc_vaapi"
+    - "-qp 28"
+    - "-c:a copy"
