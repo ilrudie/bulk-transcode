@@ -6,9 +6,10 @@ recursive: false
 exec: false
 command_arguments:
 # Some sensible defaults for VAAPI HEVC encoding
-  options: 
+  input_options: 
     - "-vaapi_device /dev/dri/renderD128"
     - "-hwaccel vaapi"
+  output_options:
     - "-vf 'format=nv12,hwupload'"
     - "-c:v hevc_vaapi"
     - "-qp 28"
