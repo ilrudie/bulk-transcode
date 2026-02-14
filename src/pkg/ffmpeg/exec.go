@@ -16,10 +16,10 @@ func (e *Exec) Generate(args Args) string {
 	for _, option := range args.InputOptions {
 		cmd += option + " "
 	}
-	cmd += "-i " + e.Input + " "
+	cmd += "-i \"" + e.Input + "\" "
 	for _, option := range args.OutputOptions {
 		cmd += option + " "
 	}
-	cmd += e.Output
+	cmd += "\"" + e.Output + "\""
 	return cmd
 }
