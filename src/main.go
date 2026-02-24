@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/ilrudie/bulk-transcode/src/pkg/config"
@@ -49,6 +50,8 @@ func main() {
 	}
 }
 
+var unsupportedExt = []string{} 
+
 func run(cmd *cobra.Command, args []string) {
 	if verbose {
 		log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -86,14 +89,14 @@ func run(cmd *cobra.Command, args []string) {
 			}
 			ext := parts[len(parts)-1]
 			name := strings.Join(parts[:len(parts)-1], ".")
-			if ext != "mp4" {
+			if slices.Contains(unsupportedExt, ext) {
 				log.Warn("Skipping unsupported file type", "file", path)
 				return nil
 			}
 			if cfg.OutputMark != "" {
 				name = fmt.Sprintf("%s.%s", name, cfg.OutputMark)
 			}
-			outputPath := filepath.Join(cfg.OutputDir, fmt.Sprintf("%s.%s", name, ext))
+			outputPath := filepath.Join(cfg.OutputDir, fmt.Sprintf("%s.mp4", name))
 			if exists(outputPath) {
 				log.Info("Output file already exists, skipping", "output", outputPath)
 			} else {
