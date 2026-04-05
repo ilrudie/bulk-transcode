@@ -2,10 +2,12 @@ package ffmpeg
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 type Exec struct {
@@ -69,21 +71,34 @@ func (e *Exec) Run(args Args, logDir string) error {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 
-	if logDir != "" {
-		if mkErr := os.MkdirAll(logDir, 0755); mkErr != nil {
-			return mkErr
+	// Extract the return code from the error (or 0 if no error)
+	returnCode := 0
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+				returnCode = status.ExitStatus()
+			}
 		}
+	}
+
+	if logDir != "" {
 		base := filepath.Base(e.Output)
 		ext := filepath.Ext(base)
 		logName := strings.TrimSuffix(base, ext) + ".log"
 		logPath := filepath.Join(logDir, logName)
 		displayCmd := strings.Join(e.Generate(args), " ")
-		content := "=== COMMAND ===\n" + displayCmd + "\n\n=== STDOUT ===\n" + stdout.String() + "\n=== STDERR ===\n" + stderr.String()
+		content := fmt.Sprintf("=== RETURN CODE ===\n%d\n\n=== COMMAND ===\n%s\n\n=== STDOUT ===\n%s\n=== STDERR ===\n%s",
+			returnCode, displayCmd, stdout.String(), stderr.String())
 		if writeErr := os.WriteFile(logPath, []byte(content), 0644); writeErr != nil {
-			return writeErr
+			fmt.Fprintf(os.Stderr, "Warning: failed to write log file: %v\n", writeErr)
 		}
 	}
-	return err
+
+	// Success if return code is 0, otherwise return an error
+	if returnCode != 0 {
+		return fmt.Errorf("ffmpeg exited with code %d", returnCode)
+	}
+	return nil
 }
 
 // shellSplit splits s into tokens the same way a POSIX shell would, handling

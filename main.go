@@ -132,6 +132,13 @@ func run(cmd *cobra.Command, args []string) {
 		}
 		fmt.Println(sep)
 	} else {
+		// Create log directory once if needed
+		if cfg.LogDir != "" && !exists(cfg.LogDir) {
+			if mkErr := os.MkdirAll(cfg.LogDir, 0755); mkErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to create log directory: %v\n", mkErr)
+			}
+		}
+
 		for _, job := range jobs {
 			log.Info("Running job", "input", job.Input, "output", job.Output)
 			if err := job.Run(cfg.CommandArguments, cfg.LogDir); err != nil {
