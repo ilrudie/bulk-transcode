@@ -25,6 +25,7 @@ var (
 	mark      string
 	execute   bool
 	verbose   bool
+	logDir    string
 
 	rootCmd = &cobra.Command{
 		Use:   "bulk-transcode",
@@ -41,6 +42,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&mark, "mark", "m", "", "output file mark")
 	rootCmd.PersistentFlags().BoolVarP(&execute, "execute", "e", false, "execute the transcoding commands")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose logging")
+	rootCmd.PersistentFlags().StringVarP(&logDir, "log-dir", "l", "", "directory to write ffmpeg log files into (only used with --execute)")
 }
 
 func main() {
@@ -50,7 +52,7 @@ func main() {
 	}
 }
 
-var unsupportedExt = []string{} 
+var unsupportedExt = []string{"log"}
 
 func run(cmd *cobra.Command, args []string) {
 	if verbose {
@@ -68,9 +70,13 @@ func run(cmd *cobra.Command, args []string) {
 		}
 		cfg = loadedCfg
 	}
-	cfg.ArgOverrides(inputDir, outputDir, mark, execute, cmd.Flags().Changed("execute"), recursive, cmd.Flags().Changed("recursive"))
+	cfg.ArgOverrides(inputDir, outputDir, mark, execute, cmd.Flags().Changed("execute"), recursive, cmd.Flags().Changed("recursive"), logDir)
 	log.Info("Configuration", "config", cfg)
-	// Further processing would go here
+
+	if cfg.LogDir != "" && !cfg.Exec {
+		fmt.Fprintln(os.Stderr, "Warning: --log-dir is set but --execute is not; log files will not be written")
+	}
+
 	jobs := make([]ffmpeg.Exec, 0)
 
 	walkErr := filepath.WalkDir(cfg.InputDir, func(path string, d os.DirEntry, err error) error {
@@ -80,7 +86,6 @@ func run(cmd *cobra.Command, args []string) {
 		}
 		if !d.IsDir() {
 			log.Info("Found file", "path", path)
-			// Here you would add logic to transcode the file
 			_, file := filepath.Split(path)
 			parts := strings.Split(file, ".")
 			if len(parts) < 2 {
@@ -102,7 +107,7 @@ func run(cmd *cobra.Command, args []string) {
 			} else {
 				exec := ffmpeg.New(path, outputPath)
 				jobs = append(jobs, *exec)
-				log.Info("Prepared transcoding job", "input", path, "output", outputPath, "command", exec.Generate(cfg.CommandArguments))
+				log.Info("Prepared transcoding job", "input", path, "output", outputPath, "command", strings.Join(exec.Generate(cfg.CommandArguments), " "))
 			}
 		} else {
 			if !cfg.Recursive && path != cfg.InputDir {
@@ -118,15 +123,24 @@ func run(cmd *cobra.Command, args []string) {
 	if walkErr != nil {
 		log.Error("Error walking the input directory", "error", walkErr)
 	}
+
 	if !cfg.Exec {
 		log.Info("Execution flag not set; displaying prepared commands only")
 		fmt.Println(sep)
 		for _, job := range jobs {
-			fmt.Println(job.Generate(cfg.CommandArguments))
+			fmt.Println(strings.Join(job.Generate(cfg.CommandArguments), " "))
 		}
 		fmt.Println(sep)
+	} else {
+		for _, job := range jobs {
+			log.Info("Running job", "input", job.Input, "output", job.Output)
+			if err := job.Run(cfg.CommandArguments, cfg.LogDir); err != nil {
+				log.Error("ffmpeg failed", "input", job.Input, "output", job.Output, "error", err)
+			} else {
+				log.Info("ffmpeg completed", "input", job.Input, "output", job.Output)
+			}
+		}
 	}
-
 }
 
 func exists(path string) bool {

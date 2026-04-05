@@ -17,6 +17,7 @@ type Config struct {
 	OutputMark       string      `json:"output_mark"`
 	Recursive        bool        `json:"recursive"`
 	Exec             bool        `json:"exec"`
+	LogDir           string      `json:"log_dir"`
 	CommandArguments ffmpeg.Args `json:"command_arguments"`
 }
 
@@ -39,7 +40,7 @@ func DefaultConfig() *Config {
 	return c
 }
 
-func (c *Config) ArgOverrides(inputDir, outputDir, mark string, exec, eset, recursive, rset bool) {
+func (c *Config) ArgOverrides(inputDir, outputDir, mark string, exec, eset, recursive, rset bool, logDir string) {
 	if inputDir != "" {
 		c.InputDir = inputDir
 	}
@@ -54,5 +55,8 @@ func (c *Config) ArgOverrides(inputDir, outputDir, mark string, exec, eset, recu
 	}
 	if eset {
 		c.Exec = exec
+	}
+	if logDir != "" {
+		c.LogDir = logDir
 	}
 }
