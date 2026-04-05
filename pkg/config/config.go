@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"os"
 
-	"github.com/ilrudie/bulk-transcode/src/pkg/ffmpeg"
+	"github.com/ilrudie/bulk-transcode/pkg/ffmpeg"
 	"sigs.k8s.io/yaml"
 )
 

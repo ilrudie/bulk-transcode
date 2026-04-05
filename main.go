@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/ilrudie/bulk-transcode/src/pkg/config"
-	"github.com/ilrudie/bulk-transcode/src/pkg/ffmpeg"
+	"github.com/ilrudie/bulk-transcode/pkg/config"
+	"github.com/ilrudie/bulk-transcode/pkg/ffmpeg"
 	"github.com/spf13/cobra"
 )
 

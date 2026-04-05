@@ -29,7 +29,7 @@ prepare:
 	if [ ! -d "$(WORKDIR)" ]; then mkdir -p $(WORKDIR); fi
 
 build: prepare
-	go build -o $(WORKDIR)/$(binary_name) ./src
+	go build -o $(WORKDIR)/$(binary_name) .
 
 install: clean build
 	echo "Installing to:  $(install_path)"

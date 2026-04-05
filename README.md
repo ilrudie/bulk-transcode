@@ -6,18 +6,22 @@ This project exists to assist with bulk transcoding. Rather than a click-ops set
 
 ## TODO
 
-- Don't hardcode `mp4` as the only extension we care about.
-- Actually execute the commands in some sort of controlled manner, handling non-success results in some sort of reasonable way.
 - Watch mode, setup some sort of watching or periodic scanning of the input directory which will transcode any new files.
 
 ## Defaults
 
 The defaults baked into the project are for me, on my AMD system. They will transcode video into hevc (H265) without altering the resolution. They simply copy audio.
 
+## Installation
+
+```shell
+go install github.com/ilrudie/bulk-transcode@latest
+```
+
 ## Running the project
 
 ```shell
-❯ go run ./src --input-dir testdata --output-dir testdata/out -r
+❯ go run . --input-dir testdata --output-dir testdata/out -r
 time=2025-10-26T15:18:42.797-04:00 level=WARN msg="No config file specified, using default configuration"
 time=2025-10-26T15:18:42.798-04:00 level=WARN msg="Skipping output directory during recursive scan" output_dir=testdata/out
 ----------------------------------------
